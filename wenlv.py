@@ -2,82 +2,88 @@
 # -*- coding: utf-8 -*
 
 import requests
-from bs4 import BeautifulSoup
-import os
+import json
 import time
-from random import choice, randint
-import ssl
 
-ssl._create_default_https_context = ssl._create_unverified_context
+token = ""
+userid = ""
+smid = ""
 
-if not os.path.exists('套图'):
-    os.mkdir('套图')
-
-user_agent = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3100.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.61 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36 Edg/94.0.992.38",
-    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1062.0 Safari/536.3",
-    "Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.1 Safari/536.3",
-    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.1 Safari/536.3",
-    "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.1 Safari/536.3",
-    "Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.0 Safari/536.3",
-    "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24"
-
-]
-
-headers = {
-    'user-agent': choice(user_agent),
-    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
-}
-def get_taotu():
-    url = "https://www.umei.cc/bizhitupian/meinvbizhi/yangyanmeinv.htm"
-    proxies = {
-        "http": "http://221.239.44.70:8085",
-       # 'https': 'https://117.69.47.190:14965',
+def userdata(token, userid, smid):
+    url = 'https://wlkdapi.zhongchuanjukan.com/account/getTodayDetail'
+    headers = {
+        'Content-Type': 'application/json',
+        'Host': 'wlkdapi.zhongchuanjukan.com',
+        'User-Agent': 'wen lu kan dian/2.0.1 (iPad; iOS 15.3.1; Scale/2.00)',
+        'sppid': 'e2c8a1489aa1deddd8968cb5db4fa8a5'
     }
-    resp = requests.get(url=url, proxies=proxies, timeout=5)
-    resp.encoding = "utf-8"
-    html = BeautifulSoup(resp.text, "html.parser")
-    hrefs = html.find_all("a", attrs={"class": "TypeBigPics"})
-    return hrefs
+    body = '{"channel":"AppStore","userid":'+'\"'+userid+'\"'+',"appversioncode":"201","brand":"apple","sysname":"wlkd","appversion":"2.0.1","optime":"1645945937","os":"ios","token":'+'\"'+token+'\"'+',"smid":'+'\"'+smid+'\"'+',"model":"iUnknown","osversion":"15.3.1","device_userid":""}'
+    res = requests.post(url, headers=headers, data=body)
+    sj = json.loads(res.text)
+    print('当前账号总金币数量为:'+sj['balance']+', 共获得金币数量为:'+sj['todayReward'])
 
-def get_tu():
-    proxies = {
-        "http": "http://221.239.44.70:8085",
-        #'https': 'https://117.69.47.190:14965',
+def qiandao(token, userid):
+    url = 'https://wlkdapi.zhongchuanjukan.com/account/getTodayDetail'
+    headers = {
+        'Content-Type': 'application/json;charset=utf-8',
+        'Host': 'wlkdapi.zhongchuanjukan.com',
+        'Origin': 'https://wlkdapi.zhongchuanjukan.com',
+        'Referer': 'https://wlkdapi.zhongchuanjukan.com/task/view/?sysname=wlkd&token='+token+'&device_userid=&brand=apple&model=iUnknown&optime=1645768757&sppid=c30e8b71edd5c3d77f15a0b9923dd664',
+        'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 15_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
+        'X-Requested-With': 'XMLHttpRequest'
     }
-    n = 1
-    domain = "https://www.umei.cc/"
-    hrefs = get_taotu()
-    for href in hrefs:
-        href_img = href.get("href")
-        urls = domain + href_img
-        img_resp = requests.get(url=urls, proxies=proxies, timeout=(3, 7))
-        img_resp.encoding = "utf-8"
-        html = BeautifulSoup(img_resp.text, "html.parser")
-        urls = html.find("div", attrs={"class": "NewPages"})
-        url = urls.find_all("a")
-        for fimg in url:
-            lianjie = fimg.get("href")
-            img = domain + lianjie
-            img_response = requests.get(url=img, proxies=proxies, timeout=(3, 7))
-            img_response.encoding = "utf-8"
-            html = BeautifulSoup(img_response.text, "html.parser")
-            div = html.find("div", attrs={"class", "ImageBody"})
-            img_src = div.find("img").get("src")
-            img_resps = requests.get(img_src, headers=headers, proxies=proxies, timeout=300)
-            if img_resps.status_code == 200:
-                with open(r"./套图/{}.jpg".format(n), mode="wb") as f:
-                    f.write(img_resps.content)
-                print(f"{n}下载完成")
-                n += 1
-            else:
-                print("下载失败")
+    body = '{"token":'+'\"'+token+'\"'+',"userid":'+'\"'+userid+'\"'+',"sysname":"wlkd"}'
+    res = requests.post(url, headers=headers, data=body)
+    sj = json.loads(res.text)
+    qdjb = sj['todayReward']
+    print('签到获得'+str(qdjb)+'金币')
+
+
+def spsj(token, userid, smid):
+    url = 'https://wlkdapi.zhongchuanjukan.com/article/list'
+    headers = {
+        'Content-Type': 'application/json',
+        'Host': 'wlkdapi.zhongchuanjukan.com',
+        'User-Agent': 'wen lu kan dian/2.0.1 (iPad; iOS 15.3.1; Scale/2.00)',
+        'sppid': 'e72265be8c426c85f59aa2b3a77b89bc'
+    }
+    body = '{"osversion":"15.3.1","classify":0,"channel":"AppStore","userid":'+'\"'+userid+'\"'+',"appversioncode":"201","brand":"apple","sysname":"wlkd","sceneType":"list","optime":"1645770699","appversion":"2.0.1","pullAction":"header","os":"ios","token":'+'\"'+token+'\"'+',"smid":'+'\"'+smid+'\"'+',"pageNo":3,"model":"iUnknown","typeid":36}'
+    res = requests.post(url, headers=headers, data=body)
+    sj = json.loads(res.text)
+    for i in range(0, 10):
+        spid = sj['artlist'][i]['artId']
+        spname = sj['artlist'][i]['artTitle']
+        return spid, spname
+       # print('视频id:'+str(spid)+',   视频名字:'+spname)
+
+def yd(token, userid, smid, spid, spname):
+    url = 'https://wlkdapi.zhongchuanjukan.com/article/read'
+    headers = {
+        'Content-Type': 'application/json',
+        'Host': 'wlkdapi.zhongchuanjukan.com',
+        'User-Agent': 'wen lu kan dian/2.0.1 (iPad; iOS 15.3.1; Scale/2.00)',
+        'sppid': 'af3f003d5272fed6347a47aa4e9a31cf'
+    }
+    body = '{"userid":'+'\"'+userid+'\"'+',"sceneType":"list","title":'+'\"'+spname+'\"'+',"optime":"1645769288","sysname":"wlkd","smid":'+'\"'+smid+'\"'+',"brand":"apple","channel":"AppStore","appversion":"2.0.1","artClassify":0,"os":"ios","sensorX":0,"sensorY":0,"device_userid":"","token":'+'\"'+token+'\"'+',"appversioncode":"201","model":"iUnknown","sensorZ":0,"osversion":"15.3.1","artId":'+'\"'+spid+'\"'+'}'
+    res = requests.post(url, headers=headers, data=body.encode('utf-8'))
+    sj = json.loads(res.text)
+    print('本次阅读视频'+spname+'获得金币'+str(sj['profit'])+'金币')
+
+
+
+def main(token, userid, smid):
+    now = time.strftime("%H-%M-%S")
+    if now == '12-10-12':
+        qiandao(token, userid)
+    if (now == '14-20-10') | (now == '16-30-15') | (now == '20-15-11') | (now == '09-30-15') | (now == '19-30-00'):
+        for i in range(0, 5):
+            sj = spsj(token, userid, smid)
+            yd(token, userid, smid, sj[0], sj[1])
+            time.sleep(60)
+        userdata(token, userid, smid)
+
+
 
 if __name__ == '__main__':
-    get_taotu()
-    url = get_tu()
-    print("game over")
+    while True:
+        main(token, userid, smid)
